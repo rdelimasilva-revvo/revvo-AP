@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Building2 } from 'lucide-react';
 import { CNPJInput } from './MaskedInput';
 import { useEscapeKey } from '../hooks/useKeyboardShortcuts';
+
+interface SettlementAccountForm {
+  bank: string;
+  bankCode: string;
+  agency: string;
+  accountNumber: string;
+  accountType: 'checking' | 'savings';
+  holder: string;
+}
 
 interface NewClientModalProps {
   isOpen: boolean;
@@ -12,6 +21,15 @@ interface NewClientModalProps {
 export const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose, onSave }) => {
   const [cnpjList, setCnpjList] = useState<string[]>(['']);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSettlementAccount, setShowSettlementAccount] = useState(false);
+  const [settlementAccount, setSettlementAccount] = useState<SettlementAccountForm>({
+    bank: '',
+    bankCode: '',
+    agency: '',
+    accountNumber: '',
+    accountType: 'checking',
+    holder: '',
+  });
 
   useEscapeKey(() => {
     if (isOpen) onClose();
@@ -66,6 +84,7 @@ export const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose,
       return;
     }
 
+    const hasAccount = showSettlementAccount && settlementAccount.bank.trim();
     const clientsData = cnpjList.map((cnpj, index) => ({
       id: `client-${Date.now()}-${index}`,
       name: cnpj,
@@ -81,6 +100,7 @@ export const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose,
       availableLimit: 0,
       collateralValue: 0,
       status: 'pending',
+      ...(hasAccount ? { settlementAccount: { ...settlementAccount } } : {}),
     }));
 
     if (onSave) {
@@ -97,6 +117,15 @@ export const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose,
   const handleClose = () => {
     setCnpjList(['']);
     setErrors({});
+    setShowSettlementAccount(false);
+    setSettlementAccount({
+      bank: '',
+      bankCode: '',
+      agency: '',
+      accountNumber: '',
+      accountType: 'checking',
+      holder: '',
+    });
     onClose();
   };
 
@@ -156,6 +185,102 @@ export const NewClientModal: React.FC<NewClientModalProps> = ({ isOpen, onClose,
               <Plus className="w-4 h-4" />
               <span className="text-sm font-medium">Adicionar outro CNPJ</span>
             </button>
+          </div>
+
+          {/* Conta de Liquidação */}
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setShowSettlementAccount(!showSettlementAccount)}
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg"
+            >
+              <div className="flex items-center space-x-3">
+                <Building2 className="w-5 h-5 text-gray-500" />
+                <div className="text-left">
+                  <p className="font-medium text-gray-900 text-sm">Conta de Liquidação</p>
+                  <p className="text-xs text-gray-500">Cadastrar conta bancária para liquidação dos recebíveis</p>
+                </div>
+              </div>
+              {showSettlementAccount ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+
+            {showSettlementAccount && (
+              <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
+                    <input
+                      type="text"
+                      value={settlementAccount.bank}
+                      onChange={(e) => setSettlementAccount(prev => ({ ...prev, bank: e.target.value }))}
+                      placeholder="Ex: Banco do Brasil"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Código do Banco</label>
+                    <input
+                      type="text"
+                      value={settlementAccount.bankCode}
+                      onChange={(e) => setSettlementAccount(prev => ({ ...prev, bankCode: e.target.value }))}
+                      placeholder="Ex: 001"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
+                    <input
+                      type="text"
+                      value={settlementAccount.agency}
+                      onChange={(e) => setSettlementAccount(prev => ({ ...prev, agency: e.target.value }))}
+                      placeholder="Ex: 1234-5"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Número da Conta</label>
+                    <input
+                      type="text"
+                      value={settlementAccount.accountNumber}
+                      onChange={(e) => setSettlementAccount(prev => ({ ...prev, accountNumber: e.target.value }))}
+                      placeholder="Ex: 12345678-9"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Conta</label>
+                    <select
+                      value={settlementAccount.accountType}
+                      onChange={(e) => setSettlementAccount(prev => ({ ...prev, accountType: e.target.value as 'checking' | 'savings' }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                      <option value="checking">Conta Corrente</option>
+                      <option value="savings">Conta Poupança</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Titular</label>
+                    <input
+                      type="text"
+                      value={settlementAccount.holder}
+                      onChange={(e) => setSettlementAccount(prev => ({ ...prev, holder: e.target.value }))}
+                      placeholder="Nome do titular"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">

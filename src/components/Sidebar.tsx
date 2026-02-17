@@ -17,7 +17,8 @@ import {
   PanelLeftClose,
   ClipboardCheck,
   List,
-  ShieldAlert
+  ShieldAlert,
+  Bot
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
   const [disputesExpanded, setDisputesExpanded] = useState(false);
   const [helpExpanded, setHelpExpanded] = useState(false);
   const [cnabExpanded, setCnabExpanded] = useState(false);
+  const [aiToolsExpanded, setAiToolsExpanded] = useState(false);
   const [menuVisibility, setMenuVisibility] = useState(() => {
     const saved = localStorage.getItem('menuVisibilitySettings');
     return saved ? JSON.parse(saved) : {
@@ -49,6 +51,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
       optIn: true,
       settlementDomicile: true,
       partnerRegistration: true,
+      aiTools: true,
+      menuSetup: true,
+      operationParameters: true,
+      cnabGroup: true,
     };
   });
 
@@ -63,12 +69,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
 
   const allSettingsSubItems = [
     { id: 'formalization', icon: FileCheck, label: 'Formalização', visibilityKey: 'formalization' },
-    { id: 'menu-setup', icon: Sliders, label: 'Configuração de Menus', visibilityKey: null },
-    { id: 'operation-parameters', icon: Settings, label: 'Parâmetros de Operação', visibilityKey: null },
+    { id: 'menu-setup', icon: Sliders, label: 'Configuração de Menus', visibilityKey: 'menuSetup' },
+    { id: 'operation-parameters', icon: Settings, label: 'Parâmetros de Operação', visibilityKey: 'operationParameters' },
     { id: 'opt-in', icon: CheckSquare, label: 'Opt-in', visibilityKey: 'optIn' },
     { id: 'settlement-domicile', icon: Building2, label: 'Domicílio de Liquidação', visibilityKey: 'settlementDomicile' },
     { id: 'partner-registration', icon: Users, label: 'Cadastro de Clientes', visibilityKey: 'partnerRegistration' },
-    { id: 'cnab-group', icon: FileText, label: 'Gerador de CNAB', visibilityKey: null },
+    { id: 'cnab-group', icon: FileText, label: 'Gerador de CNAB', visibilityKey: 'cnabGroup' },
   ];
 
   const menuItems = allMenuItems.filter(item => menuVisibility[item.visibilityKey] !== false);
@@ -255,6 +261,67 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
               );
             })}
           </div>
+
+          {/* AI-TOOLS section */}
+          {menuVisibility.aiTools !== false && (
+            <>
+              <p className="px-3 mt-8 mb-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">AI-tools</p>
+
+              <div className="space-y-1">
+                {(() => {
+                  const aiSubItems = [
+                    { id: 'ai-agents-overview', label: 'Visão dos agentes' },
+                    { id: 'ai-agents-active', label: 'Agentes ativos' },
+                    { id: 'ai-agents-creator', label: 'Criador de agentes' },
+                  ];
+                  const isAnyAiActive = aiSubItems.some(sub => activeSection === sub.id);
+
+                  return (
+                    <div>
+                      <button
+                        onClick={() => setAiToolsExpanded(!aiToolsExpanded)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors text-sm ${
+                          isAnyAiActive
+                            ? 'bg-emerald-50 text-emerald-700 font-medium'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <Bot className={`w-[18px] h-[18px] mr-3 flex-shrink-0 ${isAnyAiActive ? 'text-emerald-600' : 'text-gray-400'}`} />
+                          <span>Agentes</span>
+                        </div>
+                        {aiToolsExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        )}
+                      </button>
+                      {aiToolsExpanded && (
+                        <div className="mt-1 ml-5 pl-4 border-l border-gray-200 space-y-1">
+                          {aiSubItems.map(subItem => {
+                            const isSubActive = activeSection === subItem.id;
+                            return (
+                              <button
+                                key={subItem.id}
+                                onClick={() => setActiveSection(subItem.id)}
+                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-sm ${
+                                  isSubActive
+                                    ? 'text-emerald-700 font-medium bg-emerald-50'
+                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                }`}
+                              >
+                                {subItem.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </>
+          )}
 
           {/* OUTROS section */}
           <p className="px-3 mt-8 mb-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Outros</p>

@@ -27,6 +27,9 @@ import { PartnerRegistrationModule } from './components/PartnerRegistrationModul
 import { DailyMonitoringDashboard } from './components/DailyMonitoringDashboard';
 import { MenuSetupModule } from './components/MenuSetupModule';
 import { OverviewModule } from './components/OverviewModule';
+import { AgentsOverviewModule } from './components/AgentsOverviewModule';
+import { AgentCreatorModule } from './components/AgentCreatorModule';
+import { AgentsActiveModule } from './components/AgentsActiveModule';
 import { NewClientModal } from './components/NewClientModal';
 import { ImportClientsModal } from './components/ImportClientsModal';
 import { Login } from './components/Login';
@@ -311,6 +314,9 @@ function App() {
     'cnab-connections': 'Conexão Leitores',
     'support-tickets': 'Chamados em Aberto',
     'support-faq': 'FAQ',
+    'ai-agents-overview': 'Visão dos Agentes',
+    'ai-agents-active': 'Agentes Ativos',
+    'ai-agents-creator': 'Criador de Agentes',
   };
 
   const pageTitle = pageTitleMap[activeSection] || 'Dashboard';
@@ -516,6 +522,12 @@ function App() {
             </div>
           </div>
         );
+      case 'ai-agents-overview':
+        return <AgentsOverviewModule />;
+      case 'ai-agents-active':
+        return <AgentsActiveModule />;
+      case 'ai-agents-creator':
+        return <AgentCreatorModule />;
       default:
         return <OverviewModule />;
     }

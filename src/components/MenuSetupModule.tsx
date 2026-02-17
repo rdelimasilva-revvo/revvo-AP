@@ -15,7 +15,10 @@ import {
   LayoutDashboard,
   User,
   Shield,
-  Crown
+  Crown,
+  Bot,
+  Sliders,
+  Settings
 } from 'lucide-react';
 
 interface MenuVisibilitySettings {
@@ -28,6 +31,10 @@ interface MenuVisibilitySettings {
   optIn: boolean;
   settlementDomicile: boolean;
   partnerRegistration: boolean;
+  aiTools: boolean;
+  menuSetup: boolean;
+  operationParameters: boolean;
+  cnabGroup: boolean;
 }
 
 type ProfileType = 'analista' | 'coordenador' | 'master';
@@ -48,6 +55,10 @@ const defaultSettings: MenuVisibilitySettings = {
   optIn: true,
   settlementDomicile: true,
   partnerRegistration: true,
+  aiTools: true,
+  menuSetup: true,
+  operationParameters: true,
+  cnabGroup: true,
 };
 
 const profiles = [
@@ -91,12 +102,16 @@ export const MenuSetupModule: React.FC = () => {
     { id: 'contractsMenu', icon: FileText, label: 'Operações', key: 'contractsMenu' as keyof MenuVisibilitySettings },
     { id: 'monitoring', icon: BarChart3, label: 'Monitoramento', key: 'monitoring' as keyof MenuVisibilitySettings },
     { id: 'settlementControl', icon: Wallet, label: 'Liquidações', key: 'settlementControl' as keyof MenuVisibilitySettings },
+    { id: 'aiTools', icon: Bot, label: 'AI Tools', key: 'aiTools' as keyof MenuVisibilitySettings },
   ];
 
   const settingsMenuItems = [
     { id: 'optIn', icon: CheckSquare, label: 'Opt-in', key: 'optIn' as keyof MenuVisibilitySettings },
     { id: 'settlementDomicile', icon: Building2, label: 'Domicílio de Liquidação', key: 'settlementDomicile' as keyof MenuVisibilitySettings },
     { id: 'partnerRegistration', icon: Users, label: 'Cadastro de Parceiros', key: 'partnerRegistration' as keyof MenuVisibilitySettings },
+    { id: 'menuSetup', icon: Sliders, label: 'Configuração de Menus', key: 'menuSetup' as keyof MenuVisibilitySettings },
+    { id: 'operationParameters', icon: Settings, label: 'Parâmetros de Operação', key: 'operationParameters' as keyof MenuVisibilitySettings },
+    { id: 'cnabGroup', icon: FileText, label: 'Gerador de CNAB', key: 'cnabGroup' as keyof MenuVisibilitySettings },
   ];
 
   const toggleVisibility = (key: keyof MenuVisibilitySettings) => {
