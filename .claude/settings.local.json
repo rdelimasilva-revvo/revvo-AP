@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(du:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npm audit:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm run dev:*)",
+      "Bash(echo:*)",
+      "Bash(npx vite:*)",
+      "Bash(curl:*)",
+      "Bash(start:*)",
+      "Bash(cmd.exe /c start http://localhost:5173)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(node:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep:*)"
+    ]
+  }
+}
