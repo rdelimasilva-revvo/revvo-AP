@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload, CheckCircle, ArrowRight, Search, Users, Zap, Target, Calendar, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { ImportClientsModal } from './ImportClientsModal';
 import { NewClientModal } from './NewClientModal';
@@ -8,6 +8,7 @@ import { Client } from '../types';
 interface CreditRecoveryJourneyProps {
   isOpen: boolean;
   onClose: () => void;
+  initialClient?: Client | null;
 }
 
 type Step = 'clients' | 'automation' | 'summary';
@@ -38,17 +39,26 @@ const availableCardBrands = ['Visa', 'Mastercard', 'Elo', 'Amex', 'Hipercard'];
 const availableCredentiators = ['Cielo', 'Rede', 'Stone', 'GetNet', 'PagSeguro', 'SafraPay'];
 const availableFunctions = ['Débito', 'Crédito', 'Ambos'];
 
-export const CreditRecoveryJourney: React.FC<CreditRecoveryJourneyProps> = ({ isOpen, onClose }) => {
-  const [currentStep, setCurrentStep] = useState<Step>('clients');
+export const CreditRecoveryJourney: React.FC<CreditRecoveryJourneyProps> = ({ isOpen, onClose, initialClient }) => {
+  const [currentStep, setCurrentStep] = useState<Step>(initialClient ? 'automation' : 'clients');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isSearchClientModalOpen, setIsSearchClientModalOpen] = useState(false);
-  const [importedClients, setImportedClients] = useState<Client[]>([]);
+  const [importedClients, setImportedClients] = useState<Client[]>(initialClient ? [initialClient] : []);
   const [optInAuthorizations, setOptInAuthorizations] = useState<Set<string>>(new Set());
   const [contractualConsents, setContractualConsents] = useState<Set<string>>(new Set());
   const [automationConfigs, setAutomationConfigs] = useState<Map<string, AutomationConfig>>(new Map());
   const [showAdvanced, setShowAdvanced] = useState<Set<string>>(new Set());
   const [showOperationConfirmation, setShowOperationConfirmation] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialClient) {
+      setImportedClients([initialClient]);
+      setOptInAuthorizations(new Set([initialClient.id]));
+      setContractualConsents(new Set([initialClient.id]));
+      setCurrentStep('automation');
+    }
+  }, [isOpen, initialClient]);
 
   if (!isOpen) return null;
 

@@ -601,7 +601,9 @@ export const mockContracts: Contract[] = [
         status: 'completed',
         description: 'Chargeback de transação contestada'
       }
-    ]
+    ],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '2',
@@ -659,7 +661,9 @@ export const mockContracts: Contract[] = [
         status: 'completed',
         description: 'Liquidação final do contrato'
       }
-    ]
+    ],
+    requiredApprovals: 1,
+    approvals: []
   }
   ,
   {
@@ -687,7 +691,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '4',
@@ -714,7 +720,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '5',
@@ -741,7 +749,9 @@ export const mockContracts: Contract[] = [
       totalValue: 3000,
       percentage: 12
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '6',
@@ -768,7 +778,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   }
   ,
   // Additional contracts for other product types
@@ -796,7 +808,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '8',
@@ -822,7 +836,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '9',
@@ -849,7 +865,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '10',
@@ -875,7 +893,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '11',
@@ -901,7 +921,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '12',
@@ -927,7 +949,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 1,
+    approvals: []
   },
   {
     id: '13',
@@ -953,7 +977,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 2,
+    approvals: []
   },
   {
     id: '14',
@@ -979,7 +1005,9 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 2,
+    approvals: []
   },
   {
     id: '15',
@@ -1005,7 +1033,177 @@ export const mockContracts: Contract[] = [
       totalValue: 0,
       percentage: 0
     },
-    operations: []
+    operations: [],
+    requiredApprovals: 2,
+    approvals: [
+      {
+        id: 'apv-15-1',
+        approverName: 'Carlos Mendes',
+        approverRole: 'Analista de Crédito',
+        approvedAt: new Date('2025-01-18T10:30:00')
+      }
+    ]
+  },
+  {
+    id: '16',
+    clientId: '6',
+    contractNumber: 'CTR-2024-ANT-005',
+    status: 'pending_approval',
+    hasRevolvency: false,
+    productType: 'anticipation',
+    startDate: new Date('2025-01-22'),
+    endDate: new Date('2025-03-22'),
+    hasAutomaticCapture: false,
+    operationMode: 'credit' as const,
+    hasRecaptureTrigger: false,
+    createdAt: new Date('2025-01-20'),
+    requestedValue: 320000,
+    encumberedValue: 0,
+    expectedSettlementValue: 0,
+    actualSettlementValue: 0,
+    acquirers: ['Cielo', 'Rede', 'Stone'],
+    cardBrands: ['Visa', 'Mastercard'],
+    chargeback: {
+      quantity: 0,
+      totalValue: 0,
+      percentage: 0
+    },
+    operations: [],
+    requiredApprovals: 2,
+    approvals: [
+      {
+        id: 'apv-16-1',
+        approverName: 'Ana Silva',
+        approverRole: 'Gerente de Operações',
+        approvedAt: new Date('2025-01-21T09:15:00')
+      }
+    ]
+  },
+  {
+    id: '17',
+    clientId: '8',
+    contractNumber: 'CTR-2024-GAR-006',
+    status: 'pending_approval',
+    hasRevolvency: true,
+    productType: 'guarantee',
+    startDate: new Date('2025-01-25'),
+    endDate: new Date('2026-01-25'),
+    hasAutomaticCapture: true,
+    operationMode: 'both' as const,
+    hasRecaptureTrigger: true,
+    createdAt: new Date('2025-01-22'),
+    requestedValue: 500000,
+    encumberedValue: 0,
+    expectedSettlementValue: 0,
+    actualSettlementValue: 0,
+    acquirers: ['Cielo', 'Stone', 'PagSeguro', 'Rede'],
+    cardBrands: ['Visa', 'Mastercard', 'Elo', 'Hipercard'],
+    chargeback: {
+      quantity: 0,
+      totalValue: 0,
+      percentage: 0
+    },
+    operations: [],
+    requiredApprovals: 2,
+    approvals: []
+  },
+  {
+    id: '18',
+    clientId: '10',
+    contractNumber: 'CTR-2024-QD-005',
+    status: 'pending_approval',
+    hasRevolvency: false,
+    productType: 'debt-settlement',
+    startDate: new Date('2025-01-28'),
+    endDate: new Date('2025-07-28'),
+    hasAutomaticCapture: true,
+    operationMode: 'credit' as const,
+    hasRecaptureTrigger: true,
+    createdAt: new Date('2025-01-25'),
+    requestedValue: 275000,
+    encumberedValue: 0,
+    expectedSettlementValue: 0,
+    actualSettlementValue: 0,
+    acquirers: ['Stone', 'Dock'],
+    cardBrands: ['Visa', 'Elo'],
+    chargeback: {
+      quantity: 0,
+      totalValue: 0,
+      percentage: 0
+    },
+    operations: [],
+    requiredApprovals: 2,
+    approvals: [
+      {
+        id: 'apv-18-1',
+        approverName: 'Ricardo Souza',
+        approverRole: 'Diretor Financeiro',
+        approvedAt: new Date('2025-01-26T14:45:00')
+      }
+    ]
+  },
+  {
+    id: '19',
+    clientId: '13',
+    contractNumber: 'CTR-2024-ANT-006',
+    status: 'pending_approval',
+    hasRevolvency: false,
+    productType: 'anticipation',
+    startDate: new Date('2025-02-01'),
+    endDate: new Date('2025-03-01'),
+    hasAutomaticCapture: false,
+    operationMode: 'credit' as const,
+    hasRecaptureTrigger: false,
+    createdAt: new Date('2025-01-28'),
+    requestedValue: 180000,
+    encumberedValue: 0,
+    expectedSettlementValue: 0,
+    actualSettlementValue: 0,
+    acquirers: ['PagSeguro', 'Cielo'],
+    cardBrands: ['Mastercard', 'Visa', 'Elo'],
+    chargeback: {
+      quantity: 0,
+      totalValue: 0,
+      percentage: 0
+    },
+    operations: [],
+    requiredApprovals: 2,
+    approvals: []
+  },
+  {
+    id: '20',
+    clientId: '20',
+    contractNumber: 'CTR-2024-GAR-007',
+    status: 'pending_approval',
+    hasRevolvency: true,
+    productType: 'guarantee',
+    startDate: new Date('2025-02-03'),
+    endDate: new Date('2026-02-03'),
+    hasAutomaticCapture: true,
+    operationMode: 'both' as const,
+    hasRecaptureTrigger: true,
+    createdAt: new Date('2025-01-30'),
+    requestedValue: 680000,
+    encumberedValue: 0,
+    expectedSettlementValue: 0,
+    actualSettlementValue: 0,
+    acquirers: ['Cielo', 'Stone', 'Rede', 'PagSeguro'],
+    cardBrands: ['Visa', 'Mastercard', 'Elo'],
+    chargeback: {
+      quantity: 0,
+      totalValue: 0,
+      percentage: 0
+    },
+    operations: [],
+    requiredApprovals: 2,
+    approvals: [
+      {
+        id: 'apv-20-1',
+        approverName: 'Fernanda Lima',
+        approverRole: 'Compliance Officer',
+        approvedAt: new Date('2025-01-31T11:20:00')
+      }
+    ]
   }
 ];
 

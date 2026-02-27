@@ -26,36 +26,52 @@ interface MonitoringVolumeDashboardProps {
 export const MonitoringVolumeDashboard: React.FC<MonitoringVolumeDashboardProps> = ({ onNavigate }) => {
   const { receivables, liquidationProblems } = useData();
 
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [activePeriod, setActivePeriod] = useState<string>('hoje');
+
+  const periodOptions = [
+    { id: 'hoje', label: 'Hoje' },
+    { id: 'semana', label: 'Semana' },
+    { id: 'mes', label: 'Mês' },
+    { id: 'trimestre', label: 'Trimestre' },
+    { id: 'semestre', label: 'Semestre' },
+    { id: 'ano', label: 'Ano' },
+  ];
+
+  const getStartDate = (period: string): Date | null => {
+    if (period === 'hoje') return null; // sem filtro — visão consolidada do dia
+    const s = new Date();
+    switch (period) {
+      case 'semana':
+        s.setDate(s.getDate() - 7);
+        break;
+      case 'mes':
+        s.setMonth(s.getMonth() - 1);
+        break;
+      case 'trimestre':
+        s.setMonth(s.getMonth() - 3);
+        break;
+      case 'semestre':
+        s.setMonth(s.getMonth() - 6);
+        break;
+      case 'ano':
+        s.setFullYear(s.getFullYear() - 1);
+        break;
+    }
+    s.setHours(0, 0, 0, 0);
+    return s;
+  };
 
   const filteredReceivables = useMemo(() => {
-    if (!startDate && !endDate) return receivables;
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    if (end) end.setHours(23, 59, 59, 999);
-
-    return receivables.filter((r) => {
-      const date = r.settlementDate;
-      if (start && date < start) return false;
-      if (end && date > end) return false;
-      return true;
-    });
-  }, [receivables, startDate, endDate]);
+    const start = getStartDate(activePeriod);
+    if (!start) return receivables;
+    return receivables.filter((r) => r.settlementDate >= start);
+  }, [receivables, activePeriod]);
 
   const filteredLiquidationProblems = useMemo(() => {
-    if (!startDate && !endDate) return liquidationProblems;
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    if (end) end.setHours(23, 59, 59, 999);
-
-    return liquidationProblems.filter((p) => {
-      const date = new Date(p.expectedDate);
-      if (start && date < start) return false;
-      if (end && date > end) return false;
-      return true;
-    });
-  }, [liquidationProblems, startDate, endDate]);
+    const start = getStartDate(activePeriod);
+    if (!start) return liquidationProblems;
+    return liquidationProblems.filter((p) => new Date(p.expectedDate) >= start);
+  }, [liquidationProblems, activePeriod]);
 
   const notSettled = filteredLiquidationProblems.filter((p) => p.status === 'not_settled');
   const partial = filteredLiquidationProblems.filter((p) => p.status === 'partial');
@@ -164,50 +180,32 @@ export const MonitoringVolumeDashboard: React.FC<MonitoringVolumeDashboardProps>
     }
   };
 
-  const handleClearFilters = () => {
-    setStartDate('');
-    setEndDate('');
-  };
-
-  const hasFilters = startDate !== '' || endDate !== '';
+  const hasFilters = activePeriod !== 'hoje';
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="p-4 sm:p-5">
-          {/* Date filter */}
+          {/* Period filter */}
           <div className="mb-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
             <div className="flex items-center gap-3 mb-3">
               <Calendar className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Filtrar por período</span>
-              {hasFilters && (
-                <button
-                  onClick={handleClearFilters}
-                  className="ml-auto text-xs text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Limpar filtros
-                </button>
-              )}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Data inicial</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Data final</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {periodOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setActivePeriod(opt.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activePeriod === opt.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 

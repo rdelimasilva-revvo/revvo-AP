@@ -16,6 +16,7 @@ import {
   Users,
   Settings,
   FileCode,
+  Shield,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -43,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
   const [helpExpanded, setHelpExpanded] = useState(false);
   const [cnabExpanded, setCnabExpanded] = useState(false);
   const [disputesExpanded, setDisputesExpanded] = useState(false);
+  const [accessManagementExpanded, setAccessManagementExpanded] = useState(false);
 
   const btnClass = (active: boolean) =>
     `w-full flex items-center px-3 py-2.5 rounded-lg text-left transition-colors text-sm ${
@@ -106,6 +108,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
     { id: 'disputes-automation', label: 'Automações' },
   ];
 
+  const accessManagementSubItems = [
+    { id: 'user-management', label: 'Gerenciamento de Usuários' },
+    { id: 'role-permissions', label: 'Perfis e Permissões' },
+    { id: 'access-logs', label: 'Logs de Acesso' },
+  ];
+
   const monitoriaSubItems = [
     { id: 'file-processing', label: 'Processamento dos arquivos' },
     { id: 'report-processing', label: 'Processamento dos relatórios' },
@@ -132,6 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
   // Mini-icon items — CONFIGURAÇÕES
   const collapsedConfigItems: NavItem[] = [
     { id: 'financial', label: 'Geral', icon: Settings, subItems: configSubItems },
+    { id: 'user-management', label: 'Gestão de acessos', icon: Shield, subItems: accessManagementSubItems },
   ];
 
   // Mini-icon items — SUPORTE
@@ -337,6 +346,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSectio
 
           <div className="space-y-1">
             {renderExpandable('config-group', Settings, 'Geral', configExpanded, setConfigExpanded, configSubItems)}
+            {renderExpandable('access-management-group', Shield, 'Gestão de acessos', accessManagementExpanded, setAccessManagementExpanded, accessManagementSubItems)}
           </div>
 
           {/* SUPORTE section */}

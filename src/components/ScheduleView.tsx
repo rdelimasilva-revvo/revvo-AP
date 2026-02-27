@@ -642,12 +642,12 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ clients }) => {
         />
       )}
 
-      <CreditRecoveryJourney isOpen={isCreditRecoveryOpen} onClose={() => setIsCreditRecoveryOpen(false)} />
-      <GuaranteesJourney isOpen={isGuaranteesOpen} onClose={() => setIsGuaranteesOpen(false)} />
-      <PrepaymentJourney isOpen={isPrepaymentOpen} onClose={() => setIsPrepaymentOpen(false)} />
-      <AntecipationJourney isOpen={isAntecipationOpen} onClose={() => setIsAntecipationOpen(false)} />
-      <OwnershipTransferJourney isOpen={isOwnershipTransferOpen} onClose={() => setIsOwnershipTransferOpen(false)} />
-      <PreContractedAntecipationJourney isOpen={isPreContractedAntecipationOpen} onClose={() => setIsPreContractedAntecipationOpen(false)} />
+      <CreditRecoveryJourney isOpen={isCreditRecoveryOpen} onClose={() => setIsCreditRecoveryOpen(false)} initialClient={selectedClient} />
+      <GuaranteesJourney isOpen={isGuaranteesOpen} onClose={() => setIsGuaranteesOpen(false)} initialClient={selectedClient} />
+      <PrepaymentJourney isOpen={isPrepaymentOpen} onClose={() => setIsPrepaymentOpen(false)} initialClient={selectedClient} />
+      <AntecipationJourney isOpen={isAntecipationOpen} onClose={() => setIsAntecipationOpen(false)} initialClient={selectedClient} />
+      <OwnershipTransferJourney isOpen={isOwnershipTransferOpen} onClose={() => setIsOwnershipTransferOpen(false)} initialClient={selectedClient} />
+      <PreContractedAntecipationJourney isOpen={isPreContractedAntecipationOpen} onClose={() => setIsPreContractedAntecipationOpen(false)} initialClient={selectedClient} />
     </div>
     );
   }

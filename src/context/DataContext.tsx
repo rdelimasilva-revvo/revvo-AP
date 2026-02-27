@@ -27,9 +27,18 @@ const DataContext = createContext<DataContextValue | null>(null);
 
 const mockLiquidationProblems: LiquidationProblemUr[] = [];
 
+/** Garante que contratos legados sem campos de aprovação recebam defaults */
+function normalizeContracts(contracts: Contract[]): Contract[] {
+  return contracts.map(c => ({
+    ...c,
+    requiredApprovals: c.requiredApprovals ?? 1,
+    approvals: c.approvals ?? [],
+  }));
+}
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [receivables, setReceivables] = useState<Receivable[]>(mockReceivables);
-  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+  const [contracts, setContracts] = useState<Contract[]>(normalizeContracts(mockContracts));
   const [clients, setClients] = useState<Client[]>(mockClients);
   const [contaCorrenteEntries, setContaCorrenteEntries] = useState<ContaCorrenteEntry[]>(mockContaCorrenteEntries);
   const [liquidationProblems, setLiquidationProblems] = useState<LiquidationProblemUr[]>(mockLiquidationProblems);
@@ -43,7 +52,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await loadDataFromCsv();
       setReceivables(data.receivables);
-      setContracts(data.contracts);
+      setContracts(normalizeContracts(data.contracts));
       setClients(data.clients);
       setContaCorrenteEntries(data.contaCorrenteEntries);
       setLiquidationProblems(data.liquidationProblems);
@@ -52,7 +61,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar CSV');
       setUseCsv(false);
       setReceivables(mockReceivables);
-      setContracts(mockContracts);
+      setContracts(normalizeContracts(mockContracts));
       setClients(mockClients);
       setContaCorrenteEntries(mockContaCorrenteEntries);
       setLiquidationProblems([]);

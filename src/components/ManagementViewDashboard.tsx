@@ -16,8 +16,8 @@ const brl = (v: number) =>
 const COLORS = [
   { bg: '#0e4d64', light: '#d0ecf2' },   // Valor solicitado
   { bg: '#137a8b', light: '#cceff5' },   // Valor a esperar
-  { bg: '#1a9baa', light: '#c7f0f6' },   // Valor prometido
-  { bg: '#5ec4b6', light: '#d4f5ef' },   // Valor realizado
+  { bg: '#1a9baa', light: '#c7f0f6' },   // Valor efetivado
+  { bg: '#5ec4b6', light: '#d4f5ef' },   // Valor a liquidar
 ];
 
 export const ManagementViewDashboard: React.FC = () => {
@@ -118,7 +118,7 @@ export const ManagementViewDashboard: React.FC = () => {
     return [solicitado, esperar, prometido, realizado];
   }, [filtered]);
 
-  const LABELS = ['Valor solicitado', 'Valor a esperar', 'Valor prometido', 'Valor realizado'];
+  const LABELS = ['Valor solicitado', 'Valor a esperar', 'Valor efetivado', 'Valor a liquidar'];
   const maxVal = totals[0] || 1;
 
   /* ── opções de contrato ── */

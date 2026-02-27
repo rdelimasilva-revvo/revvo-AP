@@ -46,6 +46,13 @@ export interface ReceivableReport {
   status: 'complete' | 'partial' | 'pending';
 }
 
+export interface ContractApproval {
+  id: string;
+  approverName: string;
+  approverRole: string;
+  approvedAt: Date;
+}
+
 export interface Contract {
   id: string;
   clientId: string;
@@ -73,6 +80,10 @@ export interface Contract {
     percentage: number;
   };
   operations: ContractOperation[];
+  /** Número de aprovações necessárias (1 = simples, 2 = dupla) */
+  requiredApprovals: number;
+  /** Aprovações já realizadas */
+  approvals: ContractApproval[];
 }
 
 export interface ContractOperation {

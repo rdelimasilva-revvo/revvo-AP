@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload, CheckCircle, ArrowRight, Radar, Search, Users, CreditCard, Calendar, DollarSign, ChevronDown, ChevronUp } from 'lucide-react';
 import { ImportClientsModal } from './ImportClientsModal';
 import { NewClientModal } from './NewClientModal';
@@ -12,17 +12,18 @@ import { Client, ClientReceivables } from '../types';
 interface PrepaymentJourneyProps {
   isOpen: boolean;
   onClose: () => void;
+  initialClient?: Client | null;
 }
 
 type Step = 'upload' | 'radar' | 'batch' | 'summary';
 
-export const PrepaymentJourney: React.FC<PrepaymentJourneyProps> = ({ isOpen, onClose }) => {
-  const [currentStep, setCurrentStep] = useState<Step>('upload');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+export const PrepaymentJourney: React.FC<PrepaymentJourneyProps> = ({ isOpen, onClose, initialClient }) => {
+  const [currentStep, setCurrentStep] = useState<Step>(initialClient ? 'radar' : 'upload');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(initialClient || null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isSearchClientModalOpen, setIsSearchClientModalOpen] = useState(false);
-  const [importedClients, setImportedClients] = useState<Client[]>([]);
+  const [importedClients, setImportedClients] = useState<Client[]>(initialClient ? [initialClient] : []);
   const [_currentClientIndex, setCurrentClientIndex] = useState(0);
   const [clientsWithContracts, setClientsWithContracts] = useState<Set<string>>(new Set());
   const [optInAuthorizations, setOptInAuthorizations] = useState<Set<string>>(new Set());
@@ -39,6 +40,27 @@ export const PrepaymentJourney: React.FC<PrepaymentJourneyProps> = ({ isOpen, on
 
   // Pre-payment specific: OR selection for payment
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialClient) {
+      setSelectedClient(initialClient);
+      setImportedClients([initialClient]);
+      setCurrentStep('radar');
+
+      const receivables: ClientReceivables[] = [{
+        clientId: initialClient.id,
+        clientName: initialClient.name,
+        clientDocument: initialClient.document,
+        totalReceivables: Math.random() * 500000 + 100000,
+        availableReceivables: Math.random() * 400000 + 80000,
+        lockedReceivables: Math.random() * 100000,
+        lastUpdate: new Date().toISOString(),
+      }];
+      setClientsReceivables(receivables);
+      setOptInAuthorizations(new Set([initialClient.id]));
+      setContractualConsents(new Set([initialClient.id]));
+    }
+  }, [isOpen, initialClient]);
 
   if (!isOpen) return null;
 

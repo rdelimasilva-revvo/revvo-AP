@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, TrendingUp, CheckCircle, ChevronDown, ChevronUp, Search, Upload, ArrowRight, Users } from 'lucide-react';
 import { ImportClientsModal } from './ImportClientsModal';
 import { NewClientModal } from './NewClientModal';
@@ -7,6 +7,7 @@ import { Client } from '../types';
 interface AntecipationJourneyProps {
   isOpen: boolean;
   onClose: () => void;
+  initialClient?: Client | null;
 }
 
 type Step = 'client-selection' | 'selection' | 'simulation' | 'confirmation';
@@ -28,13 +29,20 @@ interface ReceivableItem {
   dueDate: string;
   acquirer: string;
   selected: boolean;
+  haircutActive: boolean;
 }
+
+const HAIRCUT_RATE = 0.02; // 2%
+
+const getHaircutAmount = (r: ReceivableItem): number =>
+  r.haircutActive ? r.amount * HAIRCUT_RATE : 0;
 
 interface BatchGroup {
   dueDate: string;
   daysUntilDue: number;
   receivables: ReceivableItem[];
   totalAmount: number;
+  haircutAmount: number;
   discountRate: number;
   discountAmount: number;
   netAmount: number;
@@ -48,21 +56,67 @@ interface DiscountRate {
 }
 
 
+const clientInfo: Record<string, { client: string; document: string }> = {
+  c1: { client: 'ABC Comércio Ltda', document: '12.345.678/0001-90' },
+  c2: { client: 'XYZ Varejo', document: '11.222.333/0001-44' },
+  c3: { client: 'Tech Solutions Brasil', document: '98.765.432/0001-10' },
+  c4: { client: 'Varejo Prime Ltda', document: '22.333.444/0001-55' },
+  c5: { client: 'Mega Store S.A.', document: '33.444.555/0001-66' },
+  c6: { client: 'Distribuidora Central', document: '44.555.666/0001-77' },
+};
+
+const acquirers = ['Cielo', 'Rede', 'Stone', 'GetNet', 'PagSeguro', 'Safrapay'];
+
+const dueDates = [
+  '2026-03-05', '2026-03-12', '2026-03-19', '2026-03-26',
+  '2026-04-04', '2026-04-11', '2026-04-18', '2026-04-25',
+  '2026-05-04', '2026-05-11', '2026-05-18', '2026-05-25',
+  '2026-06-03', '2026-06-10', '2026-06-17', '2026-06-24',
+  '2026-07-03', '2026-07-10', '2026-07-17',
+  '2026-08-02', '2026-08-09', '2026-08-16',
+  '2026-09-01', '2026-09-15',
+  '2026-10-01', '2026-10-15', '2026-10-31',
+  '2026-11-15', '2026-12-01',
+  '2027-01-15', '2027-01-29',
+];
+
+const seedAmounts: number[] = [
+  520, 680, 750, 890, 940, 1050, 1120, 1230, 1350, 1420,
+  1500, 1580, 1650, 1720, 1800, 1870, 1950, 2050, 2130, 2200,
+  2280, 2350, 2450, 2500, 600, 720, 830, 980, 1100, 1280,
+  1380, 1470, 1550, 1630, 1750, 1830, 1920, 2010, 2100, 2180,
+  510, 570, 640, 710, 780, 850, 920, 990, 1060, 1140,
+  1210, 1300, 1360, 1440, 1520, 1600, 1680, 1760, 1840, 1930,
+];
+
+const haircutIndices = new Set([0,2,3,5,7,8,10,12,14,17,19,21,24,27,30,33]);
+
+const generateClientURs = (clientId: string, startId: number): ReceivableItem[] => {
+  const info = clientInfo[clientId];
+  const urs: ReceivableItem[] = [];
+  for (let i = 0; i < 35; i++) {
+    urs.push({
+      id: String(startId + i),
+      clientId,
+      client: info.client,
+      document: info.document,
+      amount: seedAmounts[(startId + i) % seedAmounts.length],
+      dueDate: dueDates[i % dueDates.length],
+      acquirer: acquirers[i % acquirers.length],
+      selected: false,
+      haircutActive: haircutIndices.has(i),
+    });
+  }
+  return urs;
+};
+
 const mockReceivables: ReceivableItem[] = [
-  { id: '1', clientId: 'c1', client: 'ABC Comércio Ltda', document: '12.345.678/0001-90', amount: 50000, dueDate: '2026-03-05', acquirer: 'Cielo', selected: false },
-  { id: '2', clientId: 'c1', client: 'ABC Comércio Ltda', document: '12.345.678/0001-90', amount: 30000, dueDate: '2026-03-05', acquirer: 'Rede', selected: false },
-  { id: '3', clientId: 'c3', client: 'Tech Solutions Brasil', document: '98.765.432/0001-10', amount: 75000, dueDate: '2026-04-04', acquirer: 'Stone', selected: false },
-  { id: '4', clientId: 'c4', client: 'Varejo Prime Ltda', document: '22.333.444/0001-55', amount: 45000, dueDate: '2026-04-04', acquirer: 'GetNet', selected: false },
-  { id: '5', clientId: 'c5', client: 'Mega Store S.A.', document: '33.444.555/0001-66', amount: 120000, dueDate: '2026-05-04', acquirer: 'Cielo', selected: false },
-  { id: '6', clientId: 'c6', client: 'Distribuidora Central', document: '44.555.666/0001-77', amount: 60000, dueDate: '2026-05-04', acquirer: 'Rede', selected: false },
-  { id: '7', clientId: 'c1', client: 'ABC Comércio Ltda', document: '12.345.678/0001-90', amount: 85000, dueDate: '2026-06-03', acquirer: 'Stone', selected: false },
-  { id: '8', clientId: 'c3', client: 'Tech Solutions Brasil', document: '98.765.432/0001-10', amount: 95000, dueDate: '2026-06-03', acquirer: 'GetNet', selected: false },
-  { id: '9', clientId: 'c5', client: 'Mega Store S.A.', document: '33.444.555/0001-66', amount: 150000, dueDate: '2026-08-02', acquirer: 'Cielo', selected: false },
-  { id: '10', clientId: 'c2', client: 'XYZ Varejo', document: '11.222.333/0001-44', amount: 110000, dueDate: '2026-08-02', acquirer: 'Rede', selected: false },
-  { id: '11', clientId: 'c5', client: 'Mega Store S.A.', document: '33.444.555/0001-66', amount: 200000, dueDate: '2026-10-31', acquirer: 'Stone', selected: false },
-  { id: '12', clientId: 'c6', client: 'Distribuidora Central', document: '44.555.666/0001-77', amount: 130000, dueDate: '2026-10-31', acquirer: 'GetNet', selected: false },
-  { id: '13', clientId: 'c1', client: 'ABC Comércio Ltda', document: '12.345.678/0001-90', amount: 250000, dueDate: '2027-01-29', acquirer: 'Cielo', selected: false },
-  { id: '14', clientId: 'c2', client: 'XYZ Varejo', document: '11.222.333/0001-44', amount: 180000, dueDate: '2027-01-29', acquirer: 'Rede', selected: false },
+  ...generateClientURs('c1', 1),
+  ...generateClientURs('c2', 100),
+  ...generateClientURs('c3', 200),
+  ...generateClientURs('c4', 300),
+  ...generateClientURs('c5', 400),
+  ...generateClientURs('c6', 500),
 ];
 
 const calculateDaysUntilDue = (dueDate: string, today: Date): number => {
@@ -120,7 +174,7 @@ const calculateDiscountRate = (days: number, clientId?: string): number => {
   return lastRate?.rate || 4.5;
 };
 
-export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen, onClose }) => {
+export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen, onClose, initialClient }) => {
   const [currentStep, setCurrentStep] = useState<Step>('client-selection');
   const [selectedClient, setSelectedClient] = useState<AntecipationClient | null>(null);
   const [selectedReceivables, setSelectedReceivables] = useState<Set<string>>(new Set());
@@ -134,6 +188,26 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isSearchClientModalOpen, setIsSearchClientModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialClient) {
+      // Use 'c1' as the mock ID so receivables from mockReceivables match
+      const mockClientId = 'c1';
+      const clientURs = mockReceivables.filter(r => r.clientId === mockClientId);
+      const antecipationClient: AntecipationClient = {
+        id: mockClientId,
+        name: initialClient.name,
+        document: initialClient.document,
+        totalReceivables: clientURs.length,
+        availableAmount: clientURs.reduce((sum, r) => sum + r.amount, 0),
+      };
+      setSelectedClient(antecipationClient);
+      setImportedClients([antecipationClient]);
+      setOptInAuthorizations(new Set([mockClientId]));
+      setContractualConsents(new Set([mockClientId]));
+      setCurrentStep('selection');
+    }
+  }, [isOpen, initialClient]);
 
   const today = useMemo(() => new Date(), []);
 
@@ -156,15 +230,17 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
       .map(([dueDate, receivables]) => {
         const daysUntilDue = calculateDaysUntilDue(dueDate, today);
         const totalAmount = receivables.reduce((sum, r) => sum + r.amount, 0);
+        const haircutAmount = receivables.reduce((sum, r) => sum + getHaircutAmount(r), 0);
         const discountRate = calculateDiscountRate(daysUntilDue, selectedClient?.id);
         const discountAmount = (totalAmount * discountRate * daysUntilDue) / (30 * 100);
-        const netAmount = totalAmount - discountAmount;
+        const netAmount = totalAmount - haircutAmount - discountAmount;
 
         return {
           dueDate,
           daysUntilDue,
           receivables,
           totalAmount,
+          haircutAmount,
           discountRate,
           discountAmount,
           netAmount
@@ -227,6 +303,12 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
       .reduce((sum, r) => sum + r.amount, 0);
   };
 
+  const calculateTotalHaircut = () => {
+    return clientReceivables
+      .filter(r => selectedReceivables.has(r.id))
+      .reduce((sum, r) => sum + getHaircutAmount(r), 0);
+  };
+
   const calculateTotalDiscount = () => {
     return batchGroups.reduce((total, batch) => {
       const selectedInBatch = batch.receivables.filter(r => selectedReceivables.has(r.id));
@@ -239,7 +321,7 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
   };
 
   const calculateNetAmount = () => {
-    return calculateTotalAmount() - calculateTotalDiscount();
+    return calculateTotalAmount() - calculateTotalHaircut() - calculateTotalDiscount();
   };
 
   const handleCloseJourney = () => {
@@ -260,27 +342,26 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
     setCurrentStep('selection');
   };
 
-  const handleImportClients = (clients: Client[]) => {
-    const mapped: AntecipationClient[] = clients.map(c => ({
+  const mapClientToAntecipation = (c: Client): AntecipationClient => {
+    const clientURs = mockReceivables.filter(r => r.clientId === c.id);
+    return {
       id: c.id,
       name: c.name,
       document: c.document,
-      totalReceivables: Math.floor(Math.random() * 20) + 5,
-      availableAmount: Math.random() * 1500000 + 200000,
-    }));
+      totalReceivables: clientURs.length > 0 ? clientURs.length : Math.floor(Math.random() * 20) + 15,
+      availableAmount: clientURs.length > 0 ? clientURs.reduce((sum, r) => sum + r.amount, 0) : Math.random() * 50000 + 15000,
+    };
+  };
+
+  const handleImportClients = (clients: Client[]) => {
+    const mapped = clients.map(mapClientToAntecipation);
     setImportedClients(prev => [...prev, ...mapped]);
     setIsImportModalOpen(false);
   };
 
   const handleManualClientAdd = (client: Client | Client[]) => {
     const clientsToAdd = Array.isArray(client) ? client : [client];
-    const mapped: AntecipationClient[] = clientsToAdd.map(c => ({
-      id: c.id,
-      name: c.name,
-      document: c.document,
-      totalReceivables: Math.floor(Math.random() * 20) + 5,
-      availableAmount: Math.random() * 1500000 + 200000,
-    }));
+    const mapped = clientsToAdd.map(mapClientToAntecipation);
     setImportedClients(prev => [...prev, ...mapped]);
   };
 
@@ -554,10 +635,13 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
                             Taxa: {batch.discountRate}% a.m.
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 mt-2 text-sm">
+                        <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
                           <span className="text-gray-600">{batch.receivables.length} URs</span>
-                          <span className="text-gray-600">Valor Bruto: <strong>{formatCurrency(batch.totalAmount)}</strong></span>
-                          <span className="text-red-600">Desconto: <strong>{formatCurrency(batch.discountAmount)}</strong></span>
+                          <span className="text-gray-600">Bruto: <strong>{formatCurrency(batch.totalAmount)}</strong></span>
+                          {batch.haircutAmount > 0 && (
+                            <span className="text-amber-600">Redutor: <strong>-{formatCurrency(batch.haircutAmount)}</strong></span>
+                          )}
+                          <span className="text-red-600">Desconto: <strong>-{formatCurrency(batch.discountAmount)}</strong></span>
                           <span className="text-green-600">Líquido: <strong>{formatCurrency(batch.netAmount)}</strong></span>
                         </div>
                       </div>
@@ -574,6 +658,7 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
                     <div className="mt-4 space-y-2 pl-9">
                       {batch.receivables.map(receivable => {
                         const isSelected = selectedReceivables.has(receivable.id);
+                        const haircut = getHaircutAmount(receivable);
                         return (
                           <button
                             key={receivable.id}
@@ -583,11 +668,23 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">UR #{receivable.id}</p>
-                                <p className="text-xs text-gray-600">{receivable.acquirer}</p>
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">UR #{receivable.id}</p>
+                                  <p className="text-xs text-gray-600">{receivable.acquirer}</p>
+                                </div>
+                                {receivable.haircutActive && (
+                                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded uppercase leading-tight">
+                                    Redutor Ativo
+                                  </span>
+                                )}
                               </div>
-                              <p className="text-sm font-bold text-gray-900">{formatCurrency(receivable.amount)}</p>
+                              <div className="text-right flex items-center gap-3">
+                                {receivable.haircutActive && (
+                                  <span className="text-xs text-amber-600">redutor: -{formatCurrency(haircut)}</span>
+                                )}
+                                <p className="text-sm font-bold text-gray-900">{formatCurrency(receivable.amount)}</p>
+                              </div>
                             </div>
                           </button>
                         );
@@ -641,13 +738,17 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
 
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
           <h4 className="text-lg font-semibold text-blue-900 mb-4">Resumo Geral da Antecipação</h4>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="bg-white rounded-lg p-4">
               <span className="text-sm text-gray-600">Valor Bruto Total</span>
               <p className="text-2xl font-bold text-blue-900">{formatCurrency(calculateTotalAmount())}</p>
             </div>
             <div className="bg-white rounded-lg p-4">
-              <span className="text-sm text-gray-600">Desconto Total</span>
+              <span className="text-sm text-gray-600">Redutor (2%)</span>
+              <p className="text-2xl font-bold text-amber-600">-{formatCurrency(calculateTotalHaircut())}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <span className="text-sm text-gray-600">Desconto Antecipação</span>
               <p className="text-2xl font-bold text-red-600">-{formatCurrency(calculateTotalDiscount())}</p>
             </div>
             <div className="bg-white rounded-lg p-4">
@@ -662,8 +763,9 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
           {selectedBatches.map((batch) => {
             const selectedInBatch = batch.receivables.filter(r => selectedReceivables.has(r.id));
             const batchSelectedAmount = selectedInBatch.reduce((sum, r) => sum + r.amount, 0);
+            const batchHaircut = selectedInBatch.reduce((sum, r) => sum + getHaircutAmount(r), 0);
             const batchDiscount = (batchSelectedAmount * batch.discountRate * batch.daysUntilDue) / (30 * 100);
-            const batchNet = batchSelectedAmount - batchDiscount;
+            const batchNet = batchSelectedAmount - batchHaircut - batchDiscount;
 
             return (
               <div key={batch.dueDate} className="bg-white border border-gray-200 rounded-lg p-5">
@@ -682,11 +784,17 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className={`grid gap-3 mb-4 ${batchHaircut > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
                   <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-xs text-blue-900 mb-1">Valor Bruto</p>
                     <p className="text-lg font-bold text-blue-900">{formatCurrency(batchSelectedAmount)}</p>
                   </div>
+                  {batchHaircut > 0 && (
+                    <div className="bg-amber-50 rounded-lg p-3">
+                      <p className="text-xs text-amber-900 mb-1">Redutor (2%)</p>
+                      <p className="text-lg font-bold text-amber-600">-{formatCurrency(batchHaircut)}</p>
+                    </div>
+                  )}
                   <div className="bg-red-50 rounded-lg p-3">
                     <p className="text-xs text-red-900 mb-1">Desconto ({batch.discountRate}% × {batch.daysUntilDue}d)</p>
                     <p className="text-lg font-bold text-red-600">-{formatCurrency(batchDiscount)}</p>
@@ -698,15 +806,28 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
                 </div>
 
                 <div className="space-y-2">
-                  {selectedInBatch.map((receivable) => (
-                    <div key={receivable.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
-                      <div>
-                        <span className="font-medium text-gray-900">UR #{receivable.id}</span>
-                        <span className="text-gray-500 ml-2">• {receivable.acquirer}</span>
+                  {selectedInBatch.map((receivable) => {
+                    const haircut = getHaircutAmount(receivable);
+                    return (
+                      <div key={receivable.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">UR #{receivable.id}</span>
+                          <span className="text-gray-500">• {receivable.acquirer}</span>
+                          {receivable.haircutActive && (
+                            <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded uppercase leading-tight">
+                              Redutor Ativo
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {receivable.haircutActive && (
+                            <span className="text-xs text-amber-600">redutor: -{formatCurrency(haircut)}</span>
+                          )}
+                          <span className="font-semibold text-gray-900">{formatCurrency(receivable.amount)}</span>
+                        </div>
                       </div>
-                      <span className="font-semibold text-gray-900">{formatCurrency(receivable.amount)}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -783,13 +904,15 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
             {selectedBatches.map((batch) => {
               const selectedInBatch = batch.receivables.filter(r => selectedReceivables.has(r.id));
               const batchSelectedAmount = selectedInBatch.reduce((sum, r) => sum + r.amount, 0);
+              const batchHaircut = selectedInBatch.reduce((sum, r) => sum + getHaircutAmount(r), 0);
               const batchDiscount = (batchSelectedAmount * batch.discountRate * batch.daysUntilDue) / (30 * 100);
-              const batchNet = batchSelectedAmount - batchDiscount;
+              const batchNet = batchSelectedAmount - batchHaircut - batchDiscount;
+              const batchHaircutCount = selectedInBatch.filter(r => r.haircutActive).length;
 
               return (
                 <div key={batch.dueDate} className="bg-white rounded-lg p-4 border border-blue-200">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                       <span className="font-medium text-gray-900">Venc: {formatDate(batch.dueDate)}</span>
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
                         {batch.daysUntilDue}d
@@ -797,14 +920,25 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
                       <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded">
                         {batch.discountRate}% a.m.
                       </span>
+                      {batchHaircutCount > 0 && (
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded">
+                          {batchHaircutCount} com redutor
+                        </span>
+                      )}
                     </div>
                     <span className="text-sm text-gray-600">{selectedInBatch.length} URs</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className={`grid gap-2 text-sm ${batchHaircut > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
                     <div>
                       <span className="text-gray-600">Bruto: </span>
                       <span className="font-semibold text-blue-900">{formatCurrency(batchSelectedAmount)}</span>
                     </div>
+                    {batchHaircut > 0 && (
+                      <div>
+                        <span className="text-gray-600">Redutor: </span>
+                        <span className="font-semibold text-amber-600">-{formatCurrency(batchHaircut)}</span>
+                      </div>
+                    )}
                     <div>
                       <span className="text-gray-600">Desconto: </span>
                       <span className="font-semibold text-red-600">-{formatCurrency(batchDiscount)}</span>
@@ -974,13 +1108,7 @@ export const AntecipationJourney: React.FC<AntecipationJourneyProps> = ({ isOpen
           isOpen={isSearchClientModalOpen}
           onClose={() => setIsSearchClientModalOpen(false)}
           onSelectClients={(clients) => {
-            const mapped: AntecipationClient[] = clients.map(c => ({
-              id: c.id,
-              name: c.name,
-              document: c.document,
-              totalReceivables: Math.floor(Math.random() * 20) + 5,
-              availableAmount: Math.random() * 1500000 + 200000,
-            }));
+            const mapped = clients.map(mapClientToAntecipation);
             setImportedClients(prev => [...prev, ...mapped]);
             setIsSearchClientModalOpen(false);
           }}

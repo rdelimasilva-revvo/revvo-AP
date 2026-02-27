@@ -53,6 +53,7 @@ import { Client, Contract } from './types';
 import { useData } from './context/DataContext';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { FaqModule } from './components/FaqModule';
+import { AccessManagementModule } from './components/AccessManagementModule';
 
 const LazyContractDetail = React.lazy(() =>
   import('./components/ContractDetail').then(module => ({ default: module.ContractDetail }))
@@ -203,18 +204,66 @@ function App() {
     );
   }
 
+  // Nomes mock de aprovadores para simular usuários distintos
+  const mockApprovers = [
+    { name: 'Ana Silva', role: 'Gerente de Operações' },
+    { name: 'Ricardo Souza', role: 'Diretor Financeiro' },
+  ];
+
+  const addApprovalToContract = (contract: typeof appContracts[0]) => {
+    const approverIndex = contract.approvals.length % mockApprovers.length;
+    const approver = mockApprovers[approverIndex];
+    const newApproval = {
+      id: `apv-${contract.id}-${contract.approvals.length + 1}`,
+      approverName: approver.name,
+      approverRole: approver.role,
+      approvedAt: new Date(),
+    };
+    const updatedApprovals = [...contract.approvals, newApproval];
+    const isFullyApproved = updatedApprovals.length >= contract.requiredApprovals;
+    return {
+      ...contract,
+      approvals: updatedApprovals,
+      status: isFullyApproved ? 'active' as const : contract.status,
+    };
+  };
+
   const handleApproveContracts = (contractIds: string[]) => {
+    let fullyApproved = 0;
+    let partiallyApproved = 0;
     setAppContracts(prev =>
-      prev.map(c => contractIds.includes(c.id) ? { ...c, status: 'active' as const } : c)
+      prev.map(c => {
+        if (!contractIds.includes(c.id)) return c;
+        const updated = addApprovalToContract(c);
+        if (updated.status === 'active') fullyApproved++;
+        else partiallyApproved++;
+        return updated;
+      })
     );
-    addToast('success', `${contractIds.length} contrato${contractIds.length > 1 ? 's aprovados' : ' aprovado'} com sucesso!`);
+    if (fullyApproved > 0 && partiallyApproved > 0) {
+      addToast('success', `${fullyApproved} contrato${fullyApproved > 1 ? 's aprovados' : ' aprovado'}, ${partiallyApproved} aguardando 2ª aprovação`);
+    } else if (fullyApproved > 0) {
+      addToast('success', `${fullyApproved} contrato${fullyApproved > 1 ? 's aprovados' : ' aprovado'} com sucesso!`);
+    } else {
+      addToast('info', `${partiallyApproved} contrato${partiallyApproved > 1 ? 's' : ''} com 1ª aprovação registrada. Aguardando 2ª aprovação.`);
+    }
   };
 
   const handleApproveSingleContract = (contractId: string) => {
+    let wasFullyApproved = false;
     setAppContracts(prev =>
-      prev.map(c => c.id === contractId ? { ...c, status: 'active' as const } : c)
+      prev.map(c => {
+        if (c.id !== contractId) return c;
+        const updated = addApprovalToContract(c);
+        wasFullyApproved = updated.status === 'active';
+        return updated;
+      })
     );
-    addToast('success', 'Contrato aprovado com sucesso!');
+    if (wasFullyApproved) {
+      addToast('success', 'Contrato aprovado com sucesso!');
+    } else {
+      addToast('info', '1ª aprovação registrada. Aguardando 2ª aprovação para ativar o contrato.');
+    }
   };
 
   const handleRejectContract = (contractId: string) => {
@@ -270,6 +319,9 @@ function App() {
     'report-processing': 'Processamento dos relatórios',
     'chargeback-monitoring': 'Chargeback',
     'liquidation-problems': 'Problemas de liquidação',
+    'user-management': 'Gerenciamento de Usuários',
+    'role-permissions': 'Perfis e Permissões',
+    'access-logs': 'Logs de Acesso',
   };
 
   const pageTitle = pageTitleMap[activeSection] || 'Captura de recebíveis';
@@ -442,6 +494,12 @@ function App() {
         return <SupportTicketsModule />;
       case 'support-faq':
         return <FaqModule />;
+      case 'user-management':
+        return <AccessManagementModule section="user-management" />;
+      case 'role-permissions':
+        return <AccessManagementModule section="role-permissions" />;
+      case 'access-logs':
+        return <AccessManagementModule section="access-logs" />;
       default:
         return <OverviewModule />;
     }

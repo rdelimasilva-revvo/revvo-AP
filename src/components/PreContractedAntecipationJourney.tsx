@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, CheckCircle, ChevronDown, ChevronUp, Search, Upload, ArrowRight, Users, Calendar, Percent, DollarSign, Settings, TrendingUp } from 'lucide-react';
 import { ImportClientsModal } from './ImportClientsModal';
 import { NewClientModal } from './NewClientModal';
@@ -7,6 +7,7 @@ import { Client } from '../types';
 interface PreContractedAntecipationJourneyProps {
   isOpen: boolean;
   onClose: () => void;
+  initialClient?: { id: string; name: string; document: string; collateralValue?: number; availableLimit?: number } | null;
 }
 
 type Step = 'client-selection' | 'contract-config' | 'simulation' | 'confirmation';
@@ -140,7 +141,7 @@ const generateSimulationData = (
   return periods;
 };
 
-export const PreContractedAntecipationJourney: React.FC<PreContractedAntecipationJourneyProps> = ({ isOpen, onClose }) => {
+export const PreContractedAntecipationJourney: React.FC<PreContractedAntecipationJourneyProps> = ({ isOpen, onClose, initialClient }) => {
   const [currentStep, setCurrentStep] = useState<Step>('client-selection');
   const [selectedClient, setSelectedClient] = useState<PreContractClient | null>(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -188,6 +189,23 @@ export const PreContractedAntecipationJourney: React.FC<PreContractedAntecipatio
       { grossAmount: 0, discountAmount: 0, netAmount: 0, receivablesCount: 0 }
     );
   }, [simulationData]);
+
+  useEffect(() => {
+    if (isOpen && initialClient) {
+      const preContractClient: PreContractClient = {
+        id: initialClient.id,
+        name: initialClient.name,
+        document: initialClient.document,
+        totalReceivables: initialClient.collateralValue || 500000,
+        availableAmount: initialClient.availableLimit || 400000,
+      };
+      setSelectedClient(preContractClient);
+      setImportedClients([preContractClient]);
+      setOptInAuthorizations(new Set([initialClient.id]));
+      setContractualConsents(new Set([initialClient.id]));
+      setCurrentStep('contract-config');
+    }
+  }, [isOpen, initialClient]);
 
   if (!isOpen) return null;
 
